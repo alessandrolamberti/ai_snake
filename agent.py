@@ -1,6 +1,9 @@
 import torch
+import torch.nn
 import random
 import numpy as np
+import yaml
+import argparse
 from collections import deque
 from game.game import SnakeGameAI, Direction, Point
 from model import Linear_QNet, QTrainer
@@ -12,12 +15,15 @@ LR = 0.001
 
 class Agent:
 
-    def __init__(self):
+    def __init__(self, args, model):
+        self.parameters_file = args.parameters_file
+        self.args = args
+        self.parameters = yaml.load(open(self.parameters_file, 'r'), Loader=yaml.FullLoader)
         self.n_games = 0
         self.epsilon = 0 # randomness
         self.gamma = 0.9 # discount rate
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
-        self.model = Linear_QNet(11, 256, 3)
+        self.model = model
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
 
@@ -81,67 +87,26 @@ class Agent:
 
     def train_short_memory(self, state, action, reward, next_state, done):
         self.trainer.train_step(state, action, reward, next_state, done)
+    
+    def predict(self, state):
+        state_tensor = torch.tensor(state, dtype=torch.float)
+        prediction = self.model(state_tensor) # moves depending on the model
+        move = torch.argmax(prediction).item()
+        return move
 
     def get_action(self, state):
-        # random moves: tradeoff exploration / exploitation
-        self.epsilon = 80 - self.n_games
+        move = 0
         final_move = [0,0,0]
-        if random.randint(0, 200) < self.epsilon:
-            move = random.randint(0, 2)
-            final_move[move] = 1
+        # random moves: tradeoff exploration / exploitation
+        if self.args.use_trained == True:
+            move = self.predict(state)
         else:
-            state0 = torch.tensor(state, dtype=torch.float)
-            prediction = self.model(state0) # moves depending on the model
-            move = torch.argmax(prediction).item()
-            final_move[move] = 1
+            self.epsilon = 80 - self.n_games
+            if random.randint(0, 200) < self.epsilon:
+                move = random.randint(0,2)
+            else:
+                move = self.predict(state)
+
+        final_move[move] = 1
 
         return final_move
-
-
-def train():
-    plot_scores = []
-    plot_mean_scores = []
-    total_score = 0
-    record = 0
-    agent = Agent()
-    game = SnakeGameAI()
-    
-    while True:
-        # get old state
-        state_old = agent.get_state(game)
-
-        # get move
-        final_move = agent.get_action(state_old)
-
-        # perform move and get new state
-        reward, done, score = game.play_step(final_move)
-        state_new = agent.get_state(game)
-
-        # train short memory
-        agent.train_short_memory(state_old, final_move, reward, state_new, done)
-
-        # remember
-        agent.remember(state_old, final_move, reward, state_new, done)
-
-        if done:
-            # train long memory, plot result
-            game.reset()
-            agent.n_games += 1
-            agent.train_long_memory()
-
-            if score > record:
-                record = score
-                agent.model.save()
-                print('Model saved')
-
-            print('Game', agent.n_games, 'Score', score, 'Record:', record)
-
-            plot_scores.append(score)
-            total_score += score
-            mean_score = total_score / agent.n_games
-            plot_mean_scores.append(mean_score)
-            plot(plot_scores, plot_mean_scores)
-
-
-if __name__ == '__main__':
-    train()
