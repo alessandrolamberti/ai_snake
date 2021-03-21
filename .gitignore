@@ -1,2 +1,3 @@
 *.pth
+*.yml
 __pychache__/
