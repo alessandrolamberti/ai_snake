@@ -22,9 +22,9 @@ class Agent:
         self.n_games = 0
         self.epsilon = 0 # randomness
         self.gamma = 0.9 # discount rate
-        self.memory = deque(maxlen=MAX_MEMORY) # popleft()
+        self.memory = deque(maxlen=self.parameters["max_memory"]) # popleft()
         self.model = model
-        self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
+        self.trainer = QTrainer(self.model, lr=self.parameters["lr"], gamma=self.gamma)
 
 
     def get_state(self, game):
@@ -101,7 +101,7 @@ class Agent:
         if self.args.use_trained == True:
             move = self.predict(state)
         else:
-            self.epsilon = 80 - self.n_games
+            self.epsilon = 100 - self.n_games
             if random.randint(0, 200) < self.epsilon:
                 move = random.randint(0,2)
             else:

@@ -17,6 +17,7 @@ def main():
             Loader=yaml.FullLoader)
     
     model = Linear_QNet(11, 256, 3)
+
     if args.use_trained == True:
         model.load_state_dict(torch.load(parameters["model_path"]))
 
@@ -71,13 +72,10 @@ def parse_args():
         default = "parameters.yml", type = str)
 
     parser.add_argument(
-        "--use_trained",
-        default = True, type = bool)
+        "--use_trained", default=False, type = bool)
     
     parser.add_argument(
-        "--save_model", 
-        default = False, type = bool)
-    
+        "--save_model", default=False, type = bool)
     return parser.parse_args()
 
 
