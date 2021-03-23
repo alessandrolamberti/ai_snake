@@ -1,3 +1,2 @@
 AI playing snake
-
-![Alt Text](https://gifyu.com/image/f0DM)
+![](https://media.giphy.com/media/6TRCCdfJa68HXEXJ39/giphy.gif)
