@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 from IPython import display
-import matplotlib.animation as animation
 
 plt.ion()
 

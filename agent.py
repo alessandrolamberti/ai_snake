@@ -9,10 +9,6 @@ from game.game import SnakeGameAI, Direction, Point
 from model import Linear_QNet, QTrainer
 from utils import plot
 
-MAX_MEMORY = 100_000
-BATCH_SIZE = 1000
-LR = 0.001
-
 class Agent:
 
     def __init__(self, args, model):
@@ -77,8 +73,8 @@ class Agent:
         self.memory.append((state, action, reward, next_state, done)) # popleft if MAX_MEMORY is reached
 
     def train_long_memory(self):
-        if len(self.memory) > BATCH_SIZE:
-            mini_sample = random.sample(self.memory, BATCH_SIZE) # list of tuples
+        if len(self.memory) > self.parameters["batch_size"]:
+            mini_sample = random.sample(self.memory, self.parameters["batch_size"]) # list of tuples
         else:
             mini_sample = self.memory
 
